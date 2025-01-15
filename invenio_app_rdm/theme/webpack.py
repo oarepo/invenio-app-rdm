@@ -62,9 +62,9 @@ theme = WebpackThemeBundle(
                 # Invenio-Theme in order to build Semantic UI (in theme.js
                 # entry point). theme.config itself is provided by
                 # cookiecutter-invenio-rdm.
-                "../../theme.config$": "less/theme.config",
-                "../../less/site": "less/site",
-                "../../less": "less",
+                # "../../theme.config$": "less/theme.config",
+                # "../../less/site": "less/site",
+                # "../../less": "less",
                 "themes/rdm": "less/invenio_app_rdm/theme",
                 "@less/invenio_app_rdm": "less/invenio_app_rdm",
                 "@js/invenio_app_rdm": "js/invenio_app_rdm",
