@@ -67,5 +67,6 @@
 
 {%- block javascript %}
   {{ super() }}
+  {{ webpack[ config.FILES_UI_ENTRYPOINT ~ '.js'] }}
   {{ webpack['invenio-app-rdm-deposit.js'] }}
 {%- endblock %}

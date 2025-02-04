@@ -49,6 +49,8 @@ def init_config(app):
             "duration greater than or equal to 0. "
         )
 
+    if not app.config.get("FILES_UI_ENTRYPOINT", None):
+        app.config["FILES_UI_ENTRYPOINT"] = "invenio-app-rdm-files-rdm"
 
 def init_menu(app):
     """Init menu."""
