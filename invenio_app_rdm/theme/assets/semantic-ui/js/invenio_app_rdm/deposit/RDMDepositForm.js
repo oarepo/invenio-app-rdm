@@ -19,7 +19,7 @@ import {
   DatesField,
   DeleteButton,
   DepositStatusBox,
-  FileUploader,
+  FileUploader as RDMFileUploader,
   FormFeedback,
   IdentifiersField,
   PIDField,
@@ -44,6 +44,9 @@ import { Card, Container, Grid, Ref, Sticky } from "semantic-ui-react";
 import PropTypes from "prop-types";
 import Overridable from "react-overridable";
 import { ShareDraftButton } from "./ShareDraftButton";
+
+
+const FileUploader =  window.invenio.files.uploaderComponent || RDMFileUploader;
 
 export class RDMDepositForm extends Component {
   constructor(props) {

@@ -8,7 +8,7 @@
 // under the terms of the MIT License; see LICENSE file for more
 
 import { getInputFromDOM, RDMDepositFilesService } from '@js/invenio_rdm_records';
-import { UppyDepositFileApiClient } from '@inveniosoftware/invenio-files-uppy';
+import { UppyDepositFileApiClient, UppyUploader } from '@inveniosoftware/invenio-files-uppy';
 
 const {apiHeaders, default_transfer_type: defaultTransferType, fileUploadConcurrency} = getInputFromDOM("deposits-config");
 
@@ -19,5 +19,6 @@ if (window.invenio) {
   window.invenio.files = {
     apiClient: rdmFilesApiClient,
     service: rdmFilesService,
+    uploaderComponent: UppyUploader,
   };
 }
