@@ -7,14 +7,14 @@
 // Invenio App RDM is free software; you can redistribute it and/or modify it
 // under the terms of the MIT License; see LICENSE file for more
 
-import { getInputFromDOM, RDMDepositFilesService } from '@js/invenio_rdm_records';
-import { UppyDepositFileApiClient, UppyUploader } from '@inveniosoftware/invenio-files-uppy';
+import { getInputFromDOM } from '@js/invenio_rdm_records';
+import { UppyDepositFileApiClient, UppyDepositFilesService, UppyUploader } from '@inveniosoftware/invenio-files-uppy';
 
 const {apiHeaders, default_transfer_type: defaultTransferType, fileUploadConcurrency} = getInputFromDOM("deposits-config");
 
 if (window.invenio) {
   const rdmFilesApiClient = new UppyDepositFileApiClient({ apiHeaders }, defaultTransferType);
-  const rdmFilesService = new RDMDepositFilesService(rdmFilesApiClient, fileUploadConcurrency);
+  const rdmFilesService = new UppyDepositFilesService(rdmFilesApiClient, fileUploadConcurrency);
 
   window.invenio.files = {
     apiClient: rdmFilesApiClient,
