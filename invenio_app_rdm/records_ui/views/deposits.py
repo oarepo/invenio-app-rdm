@@ -346,6 +346,7 @@ def get_form_config(**kwargs):
             "APP_RDM_DEPOSIT_FORM_PUBLISH_MODAL_EXTRA"
         ),
         default_transfer_type=current_transfer_registry.default_transfer_type,
+        transfer_types=list(current_transfer_registry.get_transfer_types()),
         **kwargs,
     )
 
@@ -419,7 +420,7 @@ def deposit_create(community=None):
 @secret_link_or_login_required()
 @pass_draft(expand=True)
 @pass_draft_files
-def deposit_edit(pid_value, draft=None, draft_files=None, files_locked=True):
+def deposit_edit(pid_value, draft=None, draft_files=None, files_locked=False):
     """Edit an existing deposit."""
     # don't show draft's deposit form if the user can't edit it
     service = current_rdm_records.records_service
@@ -470,7 +471,7 @@ def deposit_edit(pid_value, draft=None, draft_files=None, files_locked=True):
         community_use_jinja_header=community_use_jinja_header,
         files=files_dict,
         searchbar_config=dict(searchUrl=get_search_url()),
-        files_locked=files_locked,
+        files_locked=False,
         permissions=draft.has_permissions_to(
             [
                 "manage",
