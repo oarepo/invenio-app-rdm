@@ -22,6 +22,8 @@ theme = WebpackThemeBundle(
                 "invenio-app-rdm-landing-page": "./js/invenio_app_rdm/landing_page/index.js",
                 "invenio-app-rdm-landing-page-access-form": "./js/invenio_app_rdm/landing_page/access.js",
                 "invenio-app-rdm-landing-page-theme": "./js/invenio_app_rdm/landing_page/theme.js",
+                "invenio-app-rdm-files-rdm": "./js/invenio_app_rdm/deposit/files-rdm.js",
+                "invenio-app-rdm-files-uppy": "./js/invenio_app_rdm/deposit/files-uppy.js",
                 "invenio-app-rdm-deposit": "./js/invenio_app_rdm/deposit/index.js",
                 "invenio-app-rdm-search": "./js/invenio_app_rdm/search/index.js",
                 "invenio-app-rdm-user-uploads": "./js/invenio_app_rdm/user_dashboard/uploads.js",
@@ -40,6 +42,7 @@ theme = WebpackThemeBundle(
             },
             dependencies={
                 "@babel/runtime": "^7.9.0",
+                "@inveniosoftware/invenio-files-uppy": "file:./oarepo/invenio-files-uppy-js/dist",
                 "@tinymce/tinymce-react": "^4.3.0",
                 "tinymce": "^6.7.2",
                 "formik": "^2.1.0",
@@ -62,9 +65,9 @@ theme = WebpackThemeBundle(
                 # Invenio-Theme in order to build Semantic UI (in theme.js
                 # entry point). theme.config itself is provided by
                 # cookiecutter-invenio-rdm.
-                # "../../theme.config$": "less/theme.config",
-                # "../../less/site": "less/site",
-                # "../../less": "less",
+                "../../theme.config$": "less/theme.config",
+                "../../less/site": "less/site",
+                "../../less": "less",
                 "themes/rdm": "less/invenio_app_rdm/theme",
                 "@less/invenio_app_rdm": "less/invenio_app_rdm",
                 "@js/invenio_app_rdm": "js/invenio_app_rdm",
