@@ -10,8 +10,9 @@
 """Routes for record-related pages provided by Invenio-App-RDM."""
 
 import itertools
-from os.path import splitext
-from pathlib import Path
+import json
+from os.path import basename, splitext
+from pathlib import Path, PurePosixPath
 
 from flask import abort, current_app, g, redirect, render_template, request, url_for
 from flask_login import current_user
@@ -43,6 +44,7 @@ from .decorators import (
     add_signposting_content_resources,
     add_signposting_landing_page,
     add_signposting_metadata_resources,
+    pass_container_file_item,
     pass_file_item,
     pass_file_metadata,
     pass_include_deleted,
@@ -132,6 +134,57 @@ class PreviewFile:
     def open(self):
         """Open the file."""
         return self.file._file.file.storage().open()
+
+
+class ContainerFilePreviewFile:
+    """Container File Preview file implementation for InvenioRDM."""
+
+    def __init__(
+        self,
+        file_item,
+        record_pid_value,
+        path,
+        extracted_file_size,
+        record=None,
+        url=None,
+    ):
+        """Create a new PreviewFile."""
+        self.file = file_item
+        self.data = file_item.data
+        self.record = record
+        self.path = path
+        self.size = extracted_file_size
+        self.extracted_filename = basename(self.path)
+        self.filename = self.data["key"]  # container file name
+        self.bucket = self.data["bucket_id"]
+        self.uri = url or url_for(
+            "invenio_app_rdm_records.record_container_file_download",
+            pid_value=record_pid_value,
+            filename=self.filename,
+            path=path,
+        )
+
+    def is_local(self):
+        """Check if file is local."""
+        return True
+
+    def has_extensions(self, *exts):
+        """Check if file has one of the extensions.
+
+        Each `exts` has the format `.{file type}` e.g. `.txt` .
+        """
+        file_ext = splitext(self.extracted_filename)[1].lower()
+        return file_ext in exts
+
+    def open(self):
+        """Open the file."""
+        from invenio_records_resources.proxies import current_service_registry
+
+        file_service = current_service_registry.get("files")
+        opened_file = file_service.open_from_container(
+            g.identity, self.record["id"], self.filename, self.path
+        )
+        return opened_file
 
 
 #
@@ -361,6 +414,77 @@ def record_file_preview(
     return default_previewer.preview(fileobj)
 
 
+@pass_record_or_draft(expand=False)
+@pass_file_metadata
+def record_container_file_preview(
+    pid_value,
+    record=None,
+    file_metadata=None,
+    **kwargs,
+):
+    """Render a preview of the specified file in a container."""
+    filename = kwargs.get("filename")
+    path = kwargs.get("path")
+
+    url = url_for(
+        "invenio_app_rdm_records.record_container_file_download",
+        pid_value=pid_value,
+        filename=filename,
+        path=path,
+    )
+
+    listing_file = file_metadata._record.media_files.get(f"{filename}.listing")
+
+    with listing_file.file.storage().open("rb") as f:
+        listing = json.load(f)
+
+    parts = list(PurePosixPath(path).parts)
+    entry = find_entry(listing.get("entries", []), parts)
+    if entry is None:
+        abort(404)
+
+    extracted_file_size = entry.get("size", 0)
+    # Find a suitable previewer
+    fileobj = ContainerFilePreviewFile(
+        file_metadata, pid_value, path, extracted_file_size, record, url
+    )
+    # Try to see if specific previewer preference is set for the file
+    file_previewer = (file_metadata.data.get("metadata") or {}).get("previewer")
+    if file_previewer:
+        previewer = current_previewer.previewers.get(file_previewer)
+        if previewer and previewer.can_preview(fileobj):
+            return previewer.preview(fileobj)
+
+    # Go through all previewers to find the first one that can preview the file
+    print(f"{list(current_previewer.iter_previewers())=}")
+    for plugin in current_previewer.iter_previewers():
+        # TODO: find better solution for this, maybe utilize file_previewer above
+        # skip IIIF because previewer requires IIIF links to be present, but we are in zip container, so they are not present
+        # but images like png/jpeg could be previewed fine without IIIF with other previewers
+        if plugin.__name__ == "invenio_app_rdm.records_ui.previewer.iiif_simple":
+            continue
+
+        if plugin.can_preview(fileobj):
+            return plugin.preview(fileobj)
+
+    return default_previewer.preview(fileobj)
+
+
+def find_entry(entries, path_parts):
+    """Recursively find entry in TOC based on path parts."""
+    if not path_parts:
+        return None
+
+    key = path_parts[0]
+    for entry in entries:
+        if entry["key"] == key:
+            if len(path_parts) == 1:
+                return entry
+            elif entry.get("entries"):
+                return find_entry(entry["entries"], path_parts[1:])
+    return None
+
+
 @pass_is_preview
 @pass_file_item(is_media=False)
 @add_signposting_content_resources
@@ -375,6 +499,21 @@ def record_file_download(pid_value, file_item=None, is_preview=False, **kwargs):
         emitter(current_app, record=file_item._record, obj=obj, via_api=False)
 
     return file_item.send_file(as_attachment=download)
+
+
+@pass_container_file_item()
+@add_signposting_content_resources
+def record_container_file_download(
+    pid_value, file_item=None, is_preview=False, **kwargs
+):
+    """Download a file from a record."""
+    # emit a file download stats event
+    emitter = current_stats.get_event_emitter("file-download")
+    if file_item is not None and emitter is not None:
+        obj = file_item._file.object_version
+        emitter(current_app, record=file_item._record, obj=obj, via_api=False)
+
+    return file_item.send_file()
 
 
 @pass_record_or_draft(expand=False)
