@@ -651,7 +651,7 @@ OAISERVER_METADATA_FORMATS = {
     },
     "datacite": {
         "serializer": "invenio_rdm_records.oai:datacite_etree",
-        "schema": "http://schema.datacite.org/meta/kernel-4.3/metadata.xsd",
+        "schema": "http://schema.datacite.org/meta/kernel-4.5/metadata.xsd",
         "namespace": "http://datacite.org/schema/kernel-4",
     },
     "oai_datacite": {
@@ -661,7 +661,7 @@ OAISERVER_METADATA_FORMATS = {
     },
     "datacite4": {
         "serializer": "invenio_rdm_records.oai:datacite_etree",
-        "schema": "http://schema.datacite.org/meta/kernel-4.3/metadata.xsd",
+        "schema": "http://schema.datacite.org/meta/kernel-4.5/metadata.xsd",
         "namespace": "http://datacite.org/schema/kernel-4",
     },
     "oai_datacite4": {
@@ -842,7 +842,7 @@ APP_RDM_RECORD_EXPORTERS = {
     "datacite-json": {
         "name": _("DataCite JSON"),
         "serializer": (
-            "invenio_rdm_records.resources.serializers:DataCite43JSONSerializer"
+            "invenio_rdm_records.resources.serializers:DataCite45JSONSerializer"
         ),
         "params": {"options": {"indent": 2, "sort_keys": True}},
         "content-type": "application/vnd.datacite.datacite+json",
@@ -851,7 +851,7 @@ APP_RDM_RECORD_EXPORTERS = {
     "datacite-xml": {
         "name": _("DataCite XML"),
         "serializer": (
-            "invenio_rdm_records.resources.serializers:DataCite43XMLSerializer"
+            "invenio_rdm_records.resources.serializers:DataCite45XMLSerializer"
         ),
         "params": {},
         "content-type": "application/vnd.datacite.datacite+xml",
