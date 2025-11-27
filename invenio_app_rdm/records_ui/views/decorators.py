@@ -253,6 +253,48 @@ def pass_file_item(is_media=False):
     return decorator
 
 
+def pass_container_file_item():
+    """Decorator to pass a extracted file from container (e.g. zip)."""
+
+    def decorator(f):
+        @wraps(f)
+        def view(**kwargs):
+            pid_value = kwargs.get("pid_value")
+            file_key = kwargs.get("filename")
+            path = kwargs.get("path")
+            extract_kwargs = {
+                "id_": pid_value,
+                "file_key": file_key,
+                "identity": g.identity,
+                "path": path,
+            }
+
+            from invenio_records_resources.proxies import current_service_registry
+
+            file_service = current_service_registry.get("files")
+
+            try:
+                item = file_service.extract_from_container(**extract_kwargs)
+
+                kwargs["file_item"] = item
+                return f(**kwargs)
+
+            except RecordDeletedException:
+                # Redirect to the record page which has proper tombstone handling
+                return redirect(
+                    url_for(
+                        "invenio_app_rdm_records.record_detail",
+                        pid_value=pid_value,
+                    ),
+                    # Use 302 (temporary) instead of 301 since records can be restored
+                    code=302,
+                )
+
+        return view
+
+    return decorator
+
+
 def pass_file_metadata(f):
     """Decorate a view to pass a file's metadata using the files service."""
 
