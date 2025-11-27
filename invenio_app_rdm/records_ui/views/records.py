@@ -439,7 +439,7 @@ def record_container_file_preview(
         listing = json.load(f)
 
     parts = list(PurePosixPath(path).parts)
-    entry = find_entry(listing.get("entries", []), parts)
+    entry = find_entry(listing.get("children", {}).values(), parts)
     if entry is None:
         abort(404)
 
@@ -458,12 +458,6 @@ def record_container_file_preview(
     # Go through all previewers to find the first one that can preview the file
     print(f"{list(current_previewer.iter_previewers())=}")
     for plugin in current_previewer.iter_previewers():
-        # TODO: find better solution for this, maybe utilize file_previewer above
-        # skip IIIF because previewer requires IIIF links to be present, but we are in zip container, so they are not present
-        # but images like png/jpeg could be previewed fine without IIIF with other previewers
-        if plugin.__name__ == "invenio_app_rdm.records_ui.previewer.iiif_simple":
-            continue
-
         if plugin.can_preview(fileobj):
             return plugin.preview(fileobj)
 
@@ -480,8 +474,8 @@ def find_entry(entries, path_parts):
         if entry["key"] == key:
             if len(path_parts) == 1:
                 return entry
-            elif entry.get("entries"):
-                return find_entry(entry["entries"], path_parts[1:])
+            elif entry.get("children"):
+                return find_entry(entry["children"].values(), path_parts[1:])
     return None
 
 
