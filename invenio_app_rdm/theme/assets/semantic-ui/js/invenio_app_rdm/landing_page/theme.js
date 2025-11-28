@@ -113,3 +113,22 @@ $statsInfoPopup.on("blur", function (event) {
   $(event.target).popup("hide");
   $(event.target).attr("aria-expanded", false);
 });
+
+// ZIP Previewer
+
+const broadcastChannel = new BroadcastChannel("invenio-previewer-zip");
+
+broadcastChannel.onmessage = (e) => {
+  const previewIframe = $("#preview-iframe");
+  $("#preview-file-title").html(`
+  <div class="ui breadcrumb">
+    <a class="section preview-link" href="${e.data.containerPreviewUrl}" target="preview-iframe" data-file-key="${e.data.containerFileKey}">${e.data.containerFileKey}</a>
+    <i class="divider">/</i>
+    <div class="active section">${e.data.fileKey}</div>
+  </div>
+  `);
+  $(".preview-link").on("click", function (event) {
+    $("#preview-file-title").html(event.target.dataset.fileKey);
+  });
+  previewIframe.attr("src", e.data.previewUrl);
+};
