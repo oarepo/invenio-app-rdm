@@ -101,11 +101,11 @@ def preview(file):
     converted_tree = convert_zip_list_container(tree_raw)
     tree_list = children_to_list(converted_tree)["children"]
     return render_template(
-        "invenio_previewer/zip.html",
+        "invenio_previewer/previewable_zip.html",
         file=file,
         tree=tree_list,
         limit_reached=False,
         error=None,
-        js_bundles=current_previewer.js_bundles,
-        css_bundles=current_previewer.css_bundles + ["zip_css.css"],
+        js_bundles=current_previewer.js_bundles + ["previewable_zip.js"],
+        css_bundles=current_previewer.css_bundles + ["previewable_zip.css"],
     )
