@@ -16,6 +16,8 @@ from flask import render_template
 from invenio_access.permissions import system_identity
 from invenio_previewer.proxies import current_previewer
 
+from invenio_app_rdm.records_ui.views.records import ContainerFilePreviewFile
+
 previewable_extensions = ["zip"]
 
 
@@ -87,7 +89,11 @@ def children_to_list(node):
 
 def can_preview(file):
     """Return True if filetype can be previewed."""
-    return file.is_local() and file.has_extensions(".zip")
+    return (
+        file.is_local()
+        and file.has_extensions(".zip")
+        and not isinstance(file, ContainerFilePreviewFile)
+    )
 
 
 def preview(file):
@@ -106,6 +112,6 @@ def preview(file):
         tree=tree_list,
         limit_reached=False,
         error=None,
-        js_bundles=current_previewer.js_bundles + ["previewable_zip.js"],
-        css_bundles=current_previewer.css_bundles + ["previewable_zip.css"],
+        js_bundles=current_previewer.js_bundles + ["previewable-zip.js"],
+        css_bundles=current_previewer.css_bundles + ["zip_css.css"],
     )
