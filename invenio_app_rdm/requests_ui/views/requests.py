@@ -206,7 +206,9 @@ def user_dashboard_request_view(request, **kwargs):
     has_topic = request["topic"] is not None
     has_record_topic = has_topic and "record" in request["topic"]
     has_community_topic = has_topic and "community" in request["topic"]
-    is_record_inclusion = request_type == CommunityInclusion.type_id
+    is_record_inclusion = request_type in current_app.config.get(
+        "COMMUNITY_INCLUSION_REQUEST_TYPES", [CommunityInclusion.type_id]
+    )
     request_permissions = request.has_permissions_to(
         ["action_accept", "lock_request", "create_comment", "reply_comment"]
     )
@@ -276,16 +278,17 @@ def user_dashboard_request_view(request, **kwargs):
             is_user_dashboard=True,
         )
 
-    topic = _resolve_topic_record(request)
-    record_ui = topic["record_ui"]
+    if request["topic"]:
+        topic = ResolverRegistry.resolve_entity_proxy(request["topic"]).resolve()
+    else:
+        topic = None
 
     return render_template(
         f"invenio_requests/{request_type}/index.html",
         base_template="invenio_app_rdm/users/base.html",
         user_avatar=avatar,
-        record=record,
-        record_ui=record_ui,
-        permissions={**topic["permissions"], **request_permissions},
+        topic=topic,
+        permissions=request_permissions,
         invenio_request=request.to_dict(),
         request_is_accepted=request_is_accepted,
         include_deleted=False,
@@ -303,12 +306,21 @@ def community_dashboard_request_view(request, community, community_ui, **kwargs)
 
     request_type = request["type"]
 
-    is_draft_submission = request_type == CommunitySubmission.type_id
-    is_record_inclusion = request_type == CommunityInclusion.type_id
-    is_member_invitation = request_type == CommunityInvitation.type_id
-    is_subcommunity_request = request_type == SubCommunityRequest.type_id
-    is_subcommunity_invitation_request = (
-        request_type == SubCommunityInvitationRequest.type_id
+    is_draft_submission = request_type in current_app.config.get(
+        "COMMUNITY_SUBMISSION_REQUEST_TYPES", [CommunitySubmission.type_id]
+    )
+    is_record_inclusion = request_type in current_app.config.get(
+        "COMMUNITY_INCLUSION_REQUEST_TYPES", [CommunityInclusion.type_id]
+    )
+    is_member_invitation = request_type in current_app.config.get(
+        "COMMUNITY_INVITATION_REQUEST_TYPES", [CommunityInvitation.type_id]
+    )
+    is_subcommunity_request = request_type in current_app.config.get(
+        "COMMUNITY_SUBCOMMUNITY_REQUEST_TYPES", [SubCommunityRequest.type_id]
+    )
+    is_subcommunity_invitation_request = request_type in current_app.config.get(
+        "COMMUNITY_SUBCOMMUNITY_INVITATION_REQUEST_TYPES",
+        [SubCommunityInvitationRequest.type_id],
     )
     request_is_accepted = request["status"] == AcceptAction.status_to
 
@@ -389,6 +401,25 @@ def community_dashboard_request_view(request, community, community_ui, **kwargs)
             user_avatar=avatar,
             include_deleted=False,
         )
+
+    if request["topic"]:
+        topic = ResolverRegistry.resolve_entity_proxy(request["topic"]).resolve()
+    else:
+        topic = None
+
+    return render_template(
+        f"invenio_requests/{request_type}/index.html",
+        theme=community.to_dict().get("theme", {}),
+        base_template="invenio_communities/details/base.html",
+        invenio_request=request.to_dict(),
+        topic=topic,
+        community=community,
+        community_ui=community_ui,
+        permissions=permissions,
+        request_is_accepted=request_is_accepted,
+        user_avatar=avatar,
+        include_deleted=False,
+    )
 
 
 @login_required
