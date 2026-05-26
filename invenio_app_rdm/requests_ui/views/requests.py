@@ -206,7 +206,9 @@ def user_dashboard_request_view(request, **kwargs):
     has_topic = request["topic"] is not None
     has_record_topic = has_topic and "record" in request["topic"]
     has_community_topic = has_topic and "community" in request["topic"]
-    is_record_inclusion = request_type == CommunityInclusion.type_id
+    is_record_inclusion = request_type in current_app.config.get(
+        "COMMUNITY_INCLUSION_REQUEST_TYPES", [CommunityInclusion.type_id]
+    )
     request_permissions = request.has_permissions_to(
         ["action_accept", "lock_request", "create_comment", "reply_comment"]
     )
@@ -303,12 +305,21 @@ def community_dashboard_request_view(request, community, community_ui, **kwargs)
 
     request_type = request["type"]
 
-    is_draft_submission = request_type == CommunitySubmission.type_id
-    is_record_inclusion = request_type == CommunityInclusion.type_id
-    is_member_invitation = request_type == CommunityInvitation.type_id
-    is_subcommunity_request = request_type == SubCommunityRequest.type_id
-    is_subcommunity_invitation_request = (
-        request_type == SubCommunityInvitationRequest.type_id
+    is_draft_submission = request_type in current_app.config.get(
+        "COMMUNITY_SUBMISSION_REQUEST_TYPES", [CommunitySubmission.type_id]
+    )
+    is_record_inclusion = request_type in current_app.config.get(
+        "COMMUNITY_INCLUSION_REQUEST_TYPES", [CommunityInclusion.type_id]
+    )
+    is_member_invitation = request_type in current_app.config.get(
+        "COMMUNITY_INVITATION_REQUEST_TYPES", [CommunityInvitation.type_id]
+    )
+    is_subcommunity_request = request_type in current_app.config.get(
+        "COMMUNITY_SUBCOMMUNITY_REQUEST_TYPES", [SubCommunityRequest.type_id]
+    )
+    is_subcommunity_invitation_request = request_type in current_app.config.get(
+        "COMMUNITY_SUBCOMMUNITY_INVITATION_REQUEST_TYPES",
+        [SubCommunityInvitationRequest.type_id],
     )
     request_is_accepted = request["status"] == AcceptAction.status_to
 
