@@ -278,16 +278,17 @@ def user_dashboard_request_view(request, **kwargs):
             is_user_dashboard=True,
         )
 
-    topic = _resolve_topic_record(request)
-    record_ui = topic["record_ui"]
+    if request["topic"]:
+        topic = ResolverRegistry.resolve_entity_proxy(request["topic"]).resolve()
+    else:
+        topic = None
 
     return render_template(
         f"invenio_requests/{request_type}/index.html",
         base_template="invenio_app_rdm/users/base.html",
         user_avatar=avatar,
-        record=record,
-        record_ui=record_ui,
-        permissions={**topic["permissions"], **request_permissions},
+        topic=topic,
+        permissions=request_permissions,
         invenio_request=request.to_dict(),
         request_is_accepted=request_is_accepted,
         include_deleted=False,
@@ -400,6 +401,25 @@ def community_dashboard_request_view(request, community, community_ui, **kwargs)
             user_avatar=avatar,
             include_deleted=False,
         )
+
+    if request["topic"]:
+        topic = ResolverRegistry.resolve_entity_proxy(request["topic"]).resolve()
+    else:
+        topic = None
+
+    return render_template(
+        f"invenio_requests/{request_type}/index.html",
+        theme=community.to_dict().get("theme", {}),
+        base_template="invenio_communities/details/base.html",
+        invenio_request=request.to_dict(),
+        topic=topic,
+        community=community,
+        community_ui=community_ui,
+        permissions=permissions,
+        request_is_accepted=request_is_accepted,
+        user_avatar=avatar,
+        include_deleted=False,
+    )
 
 
 @login_required
