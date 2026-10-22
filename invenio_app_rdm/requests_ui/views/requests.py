@@ -65,11 +65,13 @@ def _resolve_topic_record(request):
     pid = entity._parse_ref_dict_id()
 
     request_type = request["type"]
-    is_record_inclusion = request_type == CommunityInclusion.type_id
+    is_record_inclusion = request_type in current_app.config.get(
+        "COMMUNITY_INCLUSION_REQUEST_TYPES", [CommunityInclusion.type_id]
+    )
 
     try:
         if is_record_inclusion:
-            community = request["receiver"]["community"]
+            community = (request["receiver"] or {}).get("community")
             # Get the roles that can curate and in consequence should be able to see the record of the inclusion request
             can_curate_roles = {
                 role["name"]
@@ -333,7 +335,8 @@ def community_dashboard_request_view(request, community, community_ui, **kwargs)
     # Add request specific permissions so that reviewers can be selected from community curators
     permissions.update(request_permissions)
 
-    if is_draft_submission or is_record_inclusion:
+    has_record_topic = "record" in (request["topic"] or {})
+    if is_draft_submission or is_record_inclusion or has_record_topic:
         topic = _resolve_topic_record(request)
         record_ui = topic["record_ui"]
         record = topic["record"]
@@ -359,6 +362,7 @@ def community_dashboard_request_view(request, community, community_ui, **kwargs)
             invenio_request=request.to_dict(),
             record=record,
             record_ui=record_ui,
+            topic=record._record if record else None,
             community=community,
             community_ui=community_ui,
             checks=checks,
